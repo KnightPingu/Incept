@@ -1,0 +1,73 @@
+version: '3'
+
+services:
+  mariadb:
+    container_name: mariadb
+    image: mariadb
+    build:
+      context: ./requirements/mariadb
+    expose:
+      - "3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    ports:
+      - 3306:3306
+    networks:
+      - inception
+    env_file:
+      - .env
+    restart: always
+  
+  wordpress:
+    container_name: wordpress
+    image: wordpress
+    build:
+      context: ./requirements/wordpress
+    volumes:
+      - wordpress_data:/var/www/wordpress
+    ports:
+      - 9000:9000
+    networks:
+      - inception
+    env_file:
+      - .env
+    depends_on:
+      - mariadb
+    restart: always
+
+  nginx:
+    container_name: nginx
+    image: nginx
+    build:
+      context: ./requirements/nginx
+    volumes:
+      - wordpress_data:/var/www/wordpress
+    ports:
+      - 443:443
+    networks:
+      - inception
+    env_file:
+      - .env
+    depends_on:
+      - wordpress
+    restart: always
+
+networks:
+  inception:
+    driver: bridge
+
+volumes:
+
+  mariadb_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/dopeyrat/data/mariadb_data
+  
+  wordpress_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/dopeyrat/data/wordpress_data
